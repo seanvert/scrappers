@@ -2,6 +2,10 @@ from requests import get
 from time import sleep
 from bs4 import BeautifulSoup
 from pathlib import Path
+import os
+import datetime
+
+home = str(Path.home())
 
 
 def get_articles_from_category(url):
@@ -23,7 +27,8 @@ def get_html_from_article_href(name, url):
     article_page = get(url)
     article_soup = BeautifulSoup(article_page.text, 'html.parser')
     inner_body = article_soup.main
-    home = str(Path.home())
+    # TODO colocar para salvar na pasta dos documentos, depois
+    # preciso ver qual é a variável de ambiente que guarda isso
     filepath = home + "/bbc/" + name + ".html"
     # TODO ver como salvar isso num formato mais ou menos que dê pra
     # ler no kindle, que vá concatenando a saída e monte um índice.
@@ -49,9 +54,15 @@ for category in link_list_items:
         categories[current] = "https://bbc.com" + category.get("href")
 
 for (category_name, cat_url) in categories.items():
-    articles = get_articles_from_category(cat_url)
-    for article in articles:
-        sleep(6)
-        [name, url] = article
-        get_html_from_article_href(name, url)
-    sleep(10)
+    if category_name == "Brasil":
+        articles = get_articles_from_category(cat_url)
+        for article in articles:
+            sleep(6)
+            [name, url] = article
+            get_html_from_article_href(name, url)
+
+# TODO adicionar o calibre para montar epub
+# TODO transformar o script num plugin do calibre
+date = str(datetime.date.today())
+pandoc = "/usr/bin/pandoc "
+os.system(pandoc + home + '/bbc/*.html --output ' + date + '.epub')
