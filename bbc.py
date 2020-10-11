@@ -1,14 +1,13 @@
 from requests import get
 from time import sleep
 from bs4 import BeautifulSoup
+from pathlib import Path
 
 
 def get_articles_from_category(url):
     # returns [[name, href]...]
     page2 = get(url)
     soup2 = BeautifulSoup(page2.text, 'html.parser')
-    remove_nav_bar = soup2.find("ul")
-    remove_nav_bar.decompose()
     link_list2 = soup2.select("h3 > a")
     articles = []
     for article in link_list2:
@@ -23,36 +22,17 @@ def get_html_from_article_href(name, url):
     print(name)
     article_page = get(url)
     article_soup = BeautifulSoup(article_page.text, 'html.parser')
-    social_media = article_soup.find(class_='with-extracted-share-icons')
-    if social_media:
-        social_media.decompose()
-    inner_body = article_soup.find(class_="story-body__inner")
-    if inner_body:
-        scripts = inner_body.findAll(['script', 'style', 'svg'])
-    if scripts:
-        for script in scripts:
-            script.decompose()
-    extra_elements = inner_body.findAll(class_=[
-        'tags-title',
-        'share__title',
-        'group__title',
-        'navigation--footer__heading',
-        'orb-footer-lead',
-        'navigation__heading',
-        'off-screen'
-    ])
-    for item in extra_elements:
-        item.decompose()
-    filename = name
+    inner_body = article_soup.main
+    home = str(Path.home())
+    filepath = home + "/bbc/" + name + ".html"
     # TODO ver como salvar isso num formato mais ou menos que dê pra
     # ler no kindle, que vá concatenando a saída e monte um índice.
-    with open("/home/sean/bbc/" + filename + ".html", "w", encoding='utf-8') as file:
+    with open(filepath, "w", encoding='utf-8') as file:
         entries = inner_body.findAll(['h1', 'h2', 'p'])
+        # este pop tira o parágrafo com o anúncio do youtube
         entries.pop()
-        header = article_soup.find(class_='story-body__h1')
-        entries.insert(0, header)
         for entry in entries:
-            file.write(entry.prettify())
+            file.write(str(entry))
 
 
 page = get('https://www.bbc.com/portuguese')
