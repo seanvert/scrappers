@@ -2,23 +2,20 @@ from requests import get
 from time import sleep
 from bs4 import BeautifulSoup
 
+
 def get_articles_from_category(url):
     # returns [[name, href]...]
     page2 = get(url)
-
     soup2 = BeautifulSoup(page2.text, 'html.parser')
-
     remove_nav_bar = soup2.find("ul")
     remove_nav_bar.decompose()
-
     link_list2 = soup2.select("h3 > a")
-
     articles = []
-
     for article in link_list2:
-        articles.append([article.contents[0].contents[0], "https://bbc.com" + article.get("href")])
-
+        articles.append([article.contents[0].contents[0],
+                         "https://bbc.com" + article.get("href")])
     return articles
+
 
 # parte dos artigos
 def get_html_from_article_href(name, url):
@@ -32,8 +29,6 @@ def get_html_from_article_href(name, url):
     inner_body = article_soup.find(class_="story-body__inner")
     if inner_body:
         scripts = inner_body.findAll(['script', 'style', 'svg'])
-    else:
-        return 0
     if scripts:
         for script in scripts:
             script.decompose()
@@ -49,8 +44,8 @@ def get_html_from_article_href(name, url):
     for item in extra_elements:
         item.decompose()
     filename = name
-            # TODO ver como salvar isso num formato mais ou menos que dê pra ler
-            # no kindle, que vá concatenando a saída e monte um índice.
+    # TODO ver como salvar isso num formato mais ou menos que dê pra
+    # ler no kindle, que vá concatenando a saída e monte um índice.
     with open("/home/sean/bbc/" + filename + ".html", "w", encoding='utf-8') as file:
         entries = inner_body.findAll(['h1', 'h2', 'p'])
         entries.pop()
@@ -58,6 +53,7 @@ def get_html_from_article_href(name, url):
         entries.insert(0, header)
         for entry in entries:
             file.write(entry.prettify())
+
 
 page = get('https://www.bbc.com/portuguese')
 soup = BeautifulSoup(page.text, 'html.parser')
